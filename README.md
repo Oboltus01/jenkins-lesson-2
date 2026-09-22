@@ -1,3 +1,12 @@
+## Быстрый запуск в новой Killercoda-сессии
+
+```bash
+git clone https://github.com/Oboltus01/jenkins-lesson-2.git
+
+cd jenkins-lesson-2
+
+bash bootstrap-killercoda.sh
+
 # jenkins-lesson-2
 jenkins-lesson-2
 # Jenkins Lesson 2 — восстановление Killercoda
