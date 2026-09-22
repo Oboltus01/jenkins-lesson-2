@@ -1,24 +1,87 @@
+# Jenkins Lesson 2 — восстановление Killercoda
+
+Этот репозиторий хранит Jenkins pipeline-файлы и автоматический скрипт восстановления учебной среды Killercoda.
+
+> Скрипт предназначен только для учебной временной среды. Он отключает мастер первоначальной настройки Jenkins и защиту CSRF, поэтому не подходит для production.
+
 ## Быстрый запуск в новой Killercoda-сессии
+
+В терминале новой Killercoda-сессии выполни:
 
 ```bash
 git clone https://github.com/Oboltus01/jenkins-lesson-2.git
-
 cd jenkins-lesson-2
-
 bash bootstrap-killercoda.sh
+```
 
-# jenkins-lesson-2
-jenkins-lesson-2
-# Jenkins Lesson 2 — восстановление Killercoda
+Скрипт автоматически:
 
-Эта инструкция восстанавливает Jenkins после завершения или перезапуска Killercoda-сессии.
+1. Запускает Jenkins в Docker.
+2. Устанавливает Docker-клиент внутри Jenkins.
+3. Устанавливает плагины Pipeline, Git и Docker Pipeline.
+4. Создаёт четыре Jenkins job, использующие Jenkinsfile из этого репозитория.
 
-> Все Jenkinsfile уже находятся в этом репозитории.  
-> После восстановления их не нужно создавать заново.
+После сообщения `Done. Open port 8080 in Killercoda.` открой порт **8080**. Задания уже будут видны в Jenkins.
 
-## Шаг 1. Открой новую Killercoda-сессию
+## Задания Jenkins
 
-Открой сценарий Docker и дождись приглашения:
+| Job | Jenkinsfile | Назначение |
+|---|---|---|
+| `Git-Pipeline` | `Jenkinsfile` | Выполняет `test.sh` и выводит приветствие. |
+| `docker-multi-agent` | `jenkinsfiles/docker-multi-agent.Jenkinsfile` | Проверяет Node.js/npm и Python/pip в Docker-агентах. |
+| `docker-build-job` | `jenkinsfiles/docker-build.Jenkinsfile` | Собирает образ `my-web-app:1` и тестирует контейнер. |
+| `practice-lab-4` | `jenkinsfiles/practice-lab-4.Jenkinsfile` | Создаёт и архивирует артефакт `build.log`. |
+
+Для запуска сборки нажми зелёный треугольник справа от нужного job. Если запустить несколько job подряд, Jenkins поместит их в очередь сборок и распределит по доступным исполнителям.
+
+## Проверка из терминала Killercoda
+
+Проверить, что Jenkins видит Docker:
+
+```bash
+docker exec jenkins docker ps
+```
+
+Проверить результаты всех job через Jenkins API:
+
+```bash
+curl -sg 'http://localhost:8080/api/json?tree=jobs[name,color,lastBuild[number,result,duration]]' | python3 -m json.tool
+```
+
+У каждого job ожидается:
 
 ```text
-root@ubuntu:~$
+"result": "SUCCESS"
+```
+
+Проверить артефакт `practice-lab-4`:
+
+```bash
+docker exec jenkins cat /var/jenkins_home/jobs/practice-lab-4/builds/1/archive/build.log
+```
+
+Ожидаемый результат:
+
+```text
+Build completed successfully
+```
+
+## Ручное восстановление — для обучения
+
+Автоматический скрипт выполняет следующие основные действия:
+
+```bash
+docker run -d --name jenkins --restart always -p 8080:8080 -p 50000:50000 \
+  -v jenkins_home:/var/jenkins_home \
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  -e JAVA_OPTS="-Djenkins.install.runSetupWizard=false -Dhudson.security.csrf.GlobalCrumbIssuerConfiguration.DISABLE_CSRF_PROTECTION=true" \
+  jenkins/jenkins:lts-jdk17
+
+docker exec -u 0 jenkins sh -c 'apt-get update && apt-get install -y docker.io && chmod 666 /var/run/docker.sock'
+
+docker exec jenkins jenkins-plugin-cli --plugins workflow-aggregator git docker-workflow
+
+docker restart jenkins
+```
+
+Job-конфигурации создаются скриптом `bootstrap-killercoda.sh`, а их pipeline-код Jenkins берёт из GitHub. Поэтому после следующего сброса Killercoda вручную создавать jobs и заполнять поля SCM не нужно.
