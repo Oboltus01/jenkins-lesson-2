@@ -1,27 +1,44 @@
 # Jenkins Lesson 2 — восстановление Killercoda
 
-Этот репозиторий хранит Jenkins pipeline-файлы и автоматический скрипт восстановления учебной среды Killercoda.
+Этот репозиторий хранит Jenkins pipeline-файлы и автоматические скрипты восстановления учебной среды Killercoda.
 
-> Скрипт предназначен только для учебной временной среды. Он отключает мастер первоначальной настройки Jenkins и защиту CSRF, поэтому не подходит для production.
+> Скрипты предназначены только для учебной временной среды. Они отключают мастер первоначальной настройки Jenkins и защиту CSRF, поэтому не подходят для production.
 
 ## Быстрый запуск в новой Killercoda-сессии
 
-В терминале новой Killercoda-сессии выполни:
+В новой Killercoda-сессии достаточно выполнить **одну команду**:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/Oboltus01/jenkins-lesson-2/main/killercoda.sh | bash
+```
+
+После этого:
+
+1. `killercoda.sh` клонирует репозиторий в `~/jenkins-lesson-2` или обновляет его, если он уже существует.
+2. Автоматически запускает `bootstrap-killercoda.sh`.
+3. Jenkins запускается в Docker.
+4. В Jenkins устанавливается Docker-клиент.
+5. Устанавливаются плагины Pipeline, Git и Docker Pipeline.
+6. Создаются четыре Jenkins job, использующие Jenkinsfile из этого репозитория.
+
+После сообщения `Done. Open port 8080 in Killercoda.` открой порт **8080**. Задания уже будут видны в Jenkins.
+
+### Альтернативный запуск
+
+Если репозиторий уже клонирован:
+
+```bash
+cd ~/jenkins-lesson-2
+bash bootstrap-killercoda.sh
+```
+
+Или вручную с нуля:
 
 ```bash
 git clone https://github.com/Oboltus01/jenkins-lesson-2.git
 cd jenkins-lesson-2
 bash bootstrap-killercoda.sh
 ```
-
-Скрипт автоматически:
-
-1. Запускает Jenkins в Docker.
-2. Устанавливает Docker-клиент внутри Jenkins.
-3. Устанавливает плагины Pipeline, Git и Docker Pipeline.
-4. Создаёт четыре Jenkins job, использующие Jenkinsfile из этого репозитория.
-
-После сообщения `Done. Open port 8080 in Killercoda.` открой порт **8080**. Задания уже будут видны в Jenkins.
 
 ## Задания Jenkins
 
