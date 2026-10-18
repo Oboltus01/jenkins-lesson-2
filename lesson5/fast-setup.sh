@@ -8,7 +8,8 @@ STATE_DIR=/root/.jenkins-lesson5-fast
 PASS_FILE="$STATE_DIR/admin-password"
 INIT_DIR="$STATE_DIR/init.groovy.d"
 mkdir -p "$INIT_DIR"
-chmod 700 "$STATE_DIR" "$INIT_DIR"
+chmod 700 "$STATE_DIR"
+chmod 755 "$INIT_DIR"
 
 if docker ps -a --format '{{.Names}}' | grep -Fxq "$NAME"; then
   echo "Existing $NAME detected. Keeping its configuration (no reset)."
@@ -41,7 +42,7 @@ j.setAuthorizationStrategy(auth)
 j.save()
 println('LESSON5_FAST_ADMIN_READY')
 GROOVY
-  chmod 600 "$INIT_DIR/security.groovy"
+  chmod 644 "$INIT_DIR/security.groovy"
   docker volume create jenkins_home >/dev/null
   docker run -d --name "$NAME" \
     -p 8080:8080 -p 50000:50000 \
