@@ -20,6 +20,8 @@ else
     (umask 077; openssl rand -hex 20 > "$PASS_FILE")
   fi
   chmod 600 "$PASS_FILE"
+  # Container Jenkins runs as UID 1000; allow it to read the bind-mounted secret.
+  chown 1000:1000 "$PASS_FILE"
   cat > "$INIT_DIR/security.groovy" <<'GROOVY'
 import jenkins.model.Jenkins
 import hudson.security.HudsonPrivateSecurityRealm
