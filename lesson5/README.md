@@ -77,3 +77,35 @@ Read a **specific** build number `N` using `$JOB/N/consoleText`. Avoid relying o
 - `provision.groovy` is re-runnable and updates the same job.
 - The old `jenkins-lesson-2` recovery scripts are left untouched.
 - For a real Jenkins installation, keep authentication and CSRF protection enabled.
+
+
+## Verified continuation: Hours 5–6 and lab homework (25 October 2026)
+
+After the Hours 3–4 job has been restored, apply the verified Groovy scripts in order:
+
+- [security-hours5-6.groovy](security-hours5-6.groovy) — updates `lesson5-webhook-demo`, adds `AUTH_TOKEN` and tests token validation
+- [lab-webhook-receiver.groovy](lab-webhook-receiver.groovy) — creates a separate Freestyle job with `SECRET_KEY` and `EVENT_PAYLOAD`
+
+Run from a fresh Killercoda shell **after** `start-all.sh`. Commands below reuse the locally stored administrator password and use the same session cookie as the CSRF crumb:
+
+```bash
+PASS=$(cat /root/.jenkins-lesson5-fast/admin-password)
+COOKIE=$(mktemp)
+trap 'rm -f "$COOKIE"' EXIT
+CRUMB=$(curl -fsS -u "admin:$PASS" -c "$COOKIE" -b "$COOKIE" \
+  http://localhost:8080/crumbIssuer/api/json |
+  python3 -c 'import json,sys; print(json.load(sys.stdin)["crumb"])')
+
+BASE=https://raw.githubusercontent.com/Oboltus01/jenkins-lesson-2/main/lesson5
+for file in security-hours5-6.groovy lab-webhook-receiver.groovy; do
+  curl -fsSL "$BASE/$file" -o "/tmp/$file"
+  curl -fsS -u "admin:$PASS" -b "$COOKIE" -c "$COOKIE" \
+    -H "Jenkins-Crumb: $CRUMB" \
+    --data-urlencode "script@/tmp/$file" \
+    http://localhost:8080/scriptText
+done
+```
+
+**Observed tests (one Killercoda session):** `lesson5-webhook-demo` builds #1 push SUCCESS, #2 release SUCCESS, #3 invalid token FAILURE (expected), #4 failed due to absent python3 inside Jenkins image, #5 corrected grep/cut SUCCESS. `lab-webhook-receiver` build #1 invalid secret FAILURE (expected); build #2 valid secret SUCCESS, output `Processing action 'deploy' for component 'backend'`, and cleanup executed.
+
+These are **demonstration** values in a training lab, not production secrets. The scripts use simplified JSON extraction with grep/cut and do not implement a public webhook endpoint. The fast-start launcher currently provisions only the Hours 3–4 job; run the above continuation separately to create both final jobs.
