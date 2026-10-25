@@ -34,7 +34,7 @@ trap 'rm -f "$tmp"' EXIT
 curl -fsSL "$REPO_RAW/provision.groovy" -o "$tmp"
 
 if [ -n "${API_TOKEN:-}" ]; then
-  curl -fsS --fail-with-body -u "admin:$API_TOKEN" -X POST \
+  curl -sS --fail-with-body -u "admin:$API_TOKEN" -X POST \
     http://localhost:8080/scriptText --data-urlencode "script@$tmp"
 else
   PASS_FILE=/root/.jenkins-lesson5-fast/admin-password
@@ -45,7 +45,7 @@ else
   CRUMB=$(curl -fsS -u "admin:$ADMIN_PASS" -c "$COOKIE" -b "$COOKIE" \
     http://localhost:8080/crumbIssuer/api/json | python3 -c \
     'import json,sys; print(json.load(sys.stdin)["crumb"])')
-  curl -fsS --fail-with-body -u "admin:$ADMIN_PASS" \
+  curl -sS --fail-with-body -u "admin:$ADMIN_PASS" \
     -b "$COOKIE" -c "$COOKIE" -H "Jenkins-Crumb: $CRUMB" \
     -X POST http://localhost:8080/scriptText --data-urlencode "script@$tmp"
 fi
