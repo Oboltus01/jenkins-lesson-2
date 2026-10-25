@@ -34,7 +34,7 @@ trap 'rm -f "$tmp"' EXIT
 curl -fsSL "$REPO_RAW/provision.groovy" -o "$tmp"
 
 if [ -n "${API_TOKEN:-}" ]; then
-  curl -sS --fail-with-body -u "admin:$API_TOKEN" -X POST \
+  curl -fsS -u "admin:$API_TOKEN" -X POST \
     http://localhost:8080/scriptText --data-urlencode "script@$tmp"
 else
   PASS_FILE=/root/.jenkins-lesson5-fast/admin-password
@@ -45,8 +45,15 @@ else
   CRUMB=$(curl -fsS -u "admin:$ADMIN_PASS" -c "$COOKIE" -b "$COOKIE" \
     http://localhost:8080/crumbIssuer/api/json | python3 -c \
     'import json,sys; print(json.load(sys.stdin)["crumb"])')
-  curl -sS --fail-with-body -u "admin:$ADMIN_PASS" \
+  curl -fsS -u "admin:$ADMIN_PASS" \
     -b "$COOKIE" -c "$COOKIE" -H "Jenkins-Crumb: $CRUMB" \
     -X POST http://localhost:8080/scriptText --data-urlencode "script@$tmp"
 fi
-echo "Provisioned $JOB"
+# Verify that Groovy provisioning created the expected job.
+CHECK_PASS="${API_TOKEN:-}"
+if [ -z "$CHECK_PASS" ]; then CHECK_PASS=$(cat /root/.jenkins-lesson5-fast/admin-password); fi
+if ! curl -fsS -u "admin:$CHECK_PASS" "http://localhost:8080/job/$JOB/api/json" >/dev/null; then
+  echo "Job verification failed: $JOB" >&2
+  exit 1
+fi
+echo "Provisioned and verified $JOB"
