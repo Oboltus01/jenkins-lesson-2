@@ -26,6 +26,7 @@ else
 import jenkins.model.Jenkins
 import hudson.security.HudsonPrivateSecurityRealm
 import hudson.security.FullControlOnceLoggedInAuthorizationStrategy
+import hudson.security.csrf.DefaultCrumbIssuer
 
 def j = Jenkins.get()
 def realm = j.getSecurityRealm()
@@ -41,6 +42,9 @@ if (realm.getUser('admin') == null) {
 def auth = new FullControlOnceLoggedInAuthorizationStrategy()
 auth.setAllowAnonymousRead(false)
 j.setAuthorizationStrategy(auth)
+// For Killercoda's HTTPS reverse proxy, do not bind CSRF crumbs to client IP.
+// CSRF protection remains enabled.
+j.setCrumbIssuer(new DefaultCrumbIssuer(true))
 j.save()
 println('LESSON5_FAST_ADMIN_READY')
 GROOVY
@@ -56,18 +60,34 @@ GROOVY
   echo "Created Jenkins without installing suggested plugins."
 fi
 
+# Wait for full Jenkins startup and verified admin identity, not merely an HTTP login page.
+# An HTTP 200 from /whoAmI alone is insufficient: anonymous can also return 200.
+[ -s "$PASS_FILE" ] || { echo "Missing admin password file: $PASS_FILE" >&2; exit 1; }
 ready=false
 for i in $(seq 1 90); do
-  if curl -fsS -o /dev/null http://localhost:8080/login; then ready=true; break; fi
+  if docker logs "$NAME" 2>&1 | grep -Fq 'Jenkins is fully up and running'; then
+    response=$(curl -fsS --max-time 5 -u "admin:$(cat "$PASS_FILE")" \\
+      http://localhost:8080/whoAmI/api/json 2>/dev/null || true)
+    if printf '%s' "$response" | python3 -c '
+import json, sys
+try:
+    obj=json.load(sys.stdin)
+    assert obj.get("authenticated") is True
+    assert obj.get("anonymous") is False
+    assert obj.get("name") == "admin"
+except (ValueError, AssertionError):
+    sys.exit(1)
+' ; then
+      ready=true
+      break
+    fi
+  fi
   sleep 3
 done
-[ "$ready" = true ] || { echo "Jenkins not ready. Check: docker logs my-jenkins --tail 50"; exit 1; }
-if [ -f "$PASS_FILE" ]; then
-  result=$(curl -fsS -u "admin:$(cat "$PASS_FILE")" http://localhost:8080/whoAmI/api/json || true)
-  if ! printf '%s' "$result" | grep -q '"authenticated":true'; then
-    echo "Admin not verified yet; inspect docker logs my-jenkins --tail 50" >&2
-    exit 1
-  fi
+if [ "$ready" != true ]; then
+  echo "Jenkins not ready or admin authentication failed." >&2
+  docker logs "$NAME" --tail 50 >&2
+  exit 1
 fi
 echo "Jenkins ready. Open port 8080 in Killercoda."
 echo "Username: admin"
