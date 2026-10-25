@@ -21,13 +21,13 @@ Run this command in Killercoda's terminal:
 
 ```bash
 curl -fsSL \
-  https://raw.githubusercontent.com/Oboltus01/jenkins-lesson-2/77bcc900449b164119467e58ed76e33bf38047c3/lesson5/start-all.sh \
+  https://raw.githubusercontent.com/Oboltus01/jenkins-lesson-2/33719f55aa21fb0caf15417e2f1b9c060203290a/lesson5/start-all.sh \
   -o /tmp/jenkins-start.sh && bash /tmp/jenkins-start.sh
 ```
 
 - On a fresh session, choose and enter a password (at least 12 characters) when prompted. Input is hidden.
 - Open **Traffic / Ports → 8080**; username is `admin`, password is the one you entered.
-- The script initializes Jenkins as `my-jenkins`, keeps CSRF enabled (with client IP excluded for Killercoda's HTTPS reverse proxy), and creates or updates `lesson5-webhook-demo`.
+- The script initializes Jenkins as `my-jenkins`, keeps CSRF enabled (with client IP excluded for Killercoda's HTTPS reverse proxy), and creates or updates both `lesson5-webhook-demo` (Hours 5–6) and `lab-webhook-receiver` (homework).
 - In the same session, rerunning the command reuses the local password file and existing container; it does not delete the job. In a new Killercoda session, enter the same chosen password again.
 - Passwords are never committed to GitHub; they are stored only in temporary Killercoda files. This is for a temporary training environment, not production.
 
@@ -108,4 +108,4 @@ done
 
 **Observed tests (one Killercoda session):** `lesson5-webhook-demo` builds #1 push SUCCESS, #2 release SUCCESS, #3 invalid token FAILURE (expected), #4 failed due to absent python3 inside Jenkins image, #5 corrected grep/cut SUCCESS. `lab-webhook-receiver` build #1 invalid secret FAILURE (expected); build #2 valid secret SUCCESS, output `Processing action 'deploy' for component 'backend'`, and cleanup executed.
 
-These are **demonstration** values in a training lab, not production secrets. The scripts use simplified JSON extraction with grep/cut and do not implement a public webhook endpoint. The fast-start launcher currently provisions only the Hours 3–4 job; run the above continuation separately to create both final jobs.
+These are **demonstration** values in a training lab, not production secrets. The scripts use simplified JSON extraction with grep/cut and do not implement a public webhook endpoint. The current fast-start launcher applies both final Groovy configurations automatically. The continuation commands above are optional for manual practice.
