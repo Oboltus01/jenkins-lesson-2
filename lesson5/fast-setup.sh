@@ -2,7 +2,8 @@
 set -euo pipefail
 
 # Lesson 5 fast setup, for ephemeral Killercoda labs only.
-# Jenkins is secured with a generated admin password; CSRF remains enabled.
+# Supply JENKINS_ADMIN_PASSWORD for a reusable lab password, or generate one.
+# CSRF remains enabled. Never store the password in the public repository.
 NAME=my-jenkins
 STATE_DIR=/root/.jenkins-lesson5-fast
 PASS_FILE="$STATE_DIR/admin-password"
@@ -16,9 +17,21 @@ if docker ps -a --format '{{.Names}}' | grep -Fxq "$NAME"; then
   if ! docker ps --format '{{.Names}}' | grep -Fxq "$NAME"; then docker start "$NAME"; fi
 else
   command -v openssl >/dev/null || { echo "openssl required"; exit 1; }
-  if [ ! -s "$PASS_FILE" ]; then
-    (umask 077; openssl rand -hex 20 > "$PASS_FILE")
+  if [ -n "${JENKINS_ADMIN_PASSWORD:-}" ] && [ "${#JENKINS_ADMIN_PASSWORD}" -lt 12 ]; then
+    echo "JENKINS_ADMIN_PASSWORD must be at least 12 characters." >&2
+    exit 1
   fi
+  if [ ! -s "$PASS_FILE" ]; then
+    if [ -n "${JENKINS_ADMIN_PASSWORD:-}" ]; then
+      (umask 077; printf '%s\n' "$JENKINS_ADMIN_PASSWORD" > "$PASS_FILE")
+    else
+      (umask 077; openssl rand -hex 20 > "$PASS_FILE")
+    fi
+  elif [ -n "${JENKINS_ADMIN_PASSWORD:-}" ] && [ "$(cat "$PASS_FILE")" != "$JENKINS_ADMIN_PASSWORD" ]; then
+    echo "Existing password file differs; refusing to overwrite it." >&2
+    exit 1
+  fi
+  unset JENKINS_ADMIN_PASSWORD
   chmod 600 "$PASS_FILE"
   # Container Jenkins runs as UID 1000; allow it to read the bind-mounted secret.
   chown 1000:1000 "$PASS_FILE"
