@@ -35,8 +35,38 @@ curl -fsSL "$BASE/$RECOVER_REF/lesson5/recover.sh" -o /tmp/jenkins-recover.sh
 bash -n /tmp/jenkins-recover.sh
 bash /tmp/jenkins-recover.sh
 
+# Apply both final Groovy configurations (Hours 5-6 and homework).
+# Use a pinned snapshot so the scripts are not affected by GitHub raw branch cache.
+FINAL_REF=7f9118e8cda33e9f220130e98d2b57c73144eb89
+ADMIN_PASS=$(cat "$PASS_FILE")
+COOKIE=$(mktemp)
+trap 'rm -f "$COOKIE"; unset JENKINS_ADMIN_PASSWORD ADMIN_PASS' EXIT
+CRUMB=$(curl -fsS -u "admin:$ADMIN_PASS" -b "$COOKIE" -c "$COOKIE" \
+  http://localhost:8080/crumbIssuer/api/json | \
+  python3 -c 'import json,sys; print(json.load(sys.stdin)["crumb"])')
+for file in security-hours5-6.groovy lab-webhook-receiver.groovy; do
+  curl -fsSL "$BASE/$FINAL_REF/lesson5/$file" -o "/tmp/$file"
+  echo "Applying $file..."
+  result=$(curl -fsS -u "admin:$ADMIN_PASS" -b "$COOKIE" -c "$COOKIE" \
+    -H "Jenkins-Crumb: $CRUMB" \
+    --data-urlencode "script@/tmp/$file" http://localhost:8080/scriptText)
+  printf '%s\n' "$result"
+  case "$file:$result" in
+    security-hours5-6.groovy:*LESSON5_HOURS5_6_PROVISIONED*|lab-webhook-receiver.groovy:*LAB_WEBHOOK_RECEIVER_PROVISIONED*) ;;
+    *) echo "Provisioning failed for $file" >&2; exit 1 ;;
+  esac
+done
+for job in lesson5-webhook-demo lab-webhook-receiver; do
+  curl -fsS -u "admin:$ADMIN_PASS" \
+    "http://localhost:8080/job/$job/api/json" >/dev/null || {
+      echo "Missing job: $job" >&2
+      exit 1
+    }
+  echo "Verified: $job"
+done
+
 echo "=============================================="
-echo "Jenkins ready and lesson5-webhook-demo restored."
+echo "Jenkins ready; both final Lesson 5 jobs restored."
 echo "Open Traffic / Ports -> 8080."
 echo "Username: admin"
 echo "Password: the one entered above (or in $PASS_FILE)."
