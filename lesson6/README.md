@@ -10,6 +10,8 @@
 - [capstone_provision.groovy](capstone_provision.groovy) — Hours 9–10: Capstone.
 - [lab_artifact_verifier.groovy](lab_artifact_verifier.groovy) — самостоятельная лабораторная на Bash.
 - [restore.sh](restore.sh) — восстановление всех трёх Jenkins Job.
+- [report.sh](report.sh) — единый отчёт по результатам трёх Job (исправлено `curl -g`).
+- [HOMEWORK.md](HOMEWORK.md) — домашнее задание: разбор и исправление `curl: (3) bad range in URL`.
 
 ## Восстановление в новой Killercoda
 
@@ -44,3 +46,14 @@ Build #1 с PRODUCTION — SUCCESS; Build #2 с STAGING — SUCCESS. ZIP с Work
 ## Практика 25 октября 2026 (продолжение)
 
 Hours 7–8: Jenkins `SUCCESS`, `Archiving artifacts`, `Recording fingerprints`, архивированный `app-v1.bin` успешно проверен через `md5sum -c` после скачивания. Capstone: Build #1 `SUCCESS`, `release.json` получен через REST API. Для лабораторной скрипт исправлен на Bash из-за отсутствия `python3` внутри Jenkins; успешный повторный запуск пока не подтверждён.
+
+## Итоговый отчёт
+
+После восстановления Jenkins и выполнения сборок:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/Oboltus01/jenkins-lesson-2/lesson-structure/lesson6/report.sh -o /tmp/lesson6-report.sh
+bash /tmp/lesson6-report.sh
+```
+
+Единый отчёт ранее успешно проверен в Killercoda после исправления флага `-g`. Файлы `report.sh` и `HOMEWORK.md` сохранены для повторного запуска и сдачи.
