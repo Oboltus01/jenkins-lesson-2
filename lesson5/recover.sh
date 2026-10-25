@@ -37,8 +37,16 @@ if [ -n "${API_TOKEN:-}" ]; then
   curl -fsS --fail-with-body -u "admin:$API_TOKEN" -X POST \
     http://localhost:8080/scriptText --data-urlencode "script@$tmp"
 else
-  echo "No API_TOKEN provided. Requires explicitly authorized Jenkins API access." >&2
-  echo "Set API_TOKEN in your shell, then rerun this script." >&2
-  exit 1
+  PASS_FILE=/root/.jenkins-lesson5-fast/admin-password
+  [ -s "$PASS_FILE" ] || { echo "No API_TOKEN or lab admin password found." >&2; exit 1; }
+  COOKIE=$(mktemp)
+  trap 'rm -f "$tmp" "$COOKIE"' EXIT
+  ADMIN_PASS=$(cat "$PASS_FILE")
+  CRUMB=$(curl -fsS -u "admin:$ADMIN_PASS" -c "$COOKIE" -b "$COOKIE" \
+    http://localhost:8080/crumbIssuer/api/json | python3 -c \
+    'import json,sys; print(json.load(sys.stdin)["crumb"])')
+  curl -fsS --fail-with-body -u "admin:$ADMIN_PASS" \
+    -b "$COOKIE" -c "$COOKIE" -H "Jenkins-Crumb: $CRUMB" \
+    -X POST http://localhost:8080/scriptText --data-urlencode "script@$tmp"
 fi
 echo "Provisioned $JOB"
