@@ -10,6 +10,9 @@ trap 'rm -rf "$TMPDIR"' EXIT
 
 curl -fsSL https://raw.githubusercontent.com/Oboltus01/jenkins-lesson-2/lesson-structure/lesson6/provision.groovy -o "$TMPDIR/provision.groovy"
 curl -fsSL https://raw.githubusercontent.com/Oboltus01/jenkins-lesson-2/lesson-structure/lesson6/validation.groovy -o "$TMPDIR/validation.groovy"
+curl -fsSL https://raw.githubusercontent.com/Oboltus01/jenkins-lesson-2/lesson-structure/lesson6/checksums.groovy -o "$TMPDIR/checksums.groovy"
+curl -fsSL https://raw.githubusercontent.com/Oboltus01/jenkins-lesson-2/lesson-structure/lesson6/capstone_provision.groovy -o "$TMPDIR/capstone_provision.groovy"
+curl -fsSL https://raw.githubusercontent.com/Oboltus01/jenkins-lesson-2/lesson-structure/lesson6/lab_artifact_verifier.groovy -o "$TMPDIR/lab_artifact_verifier.groovy"
 
 get_crumb() {
   curl -fsS -u "admin:$PASS" -c "$TMPDIR/cookies" -b "$TMPDIR/cookies" "$BASE/crumbIssuer/api/json" |
@@ -24,12 +27,19 @@ deploy() {
   printf '%s\n' "$response"
   grep -Fq "$expected" <<< "$response" || { echo "Provisioning did not report success" >&2; exit 1; }
 }
-# Apply sequentially; final configuration is Hours 3-4.
+# Apply sequentially; final artifact-demo configuration is Hours 7-8.
 deploy "$TMPDIR/provision.groovy" "LESSON6_HOURS1_2_PROVISIONED"
 deploy "$TMPDIR/validation.groovy" "LESSON6_HOURS3_4_PROVISIONED"
+deploy "$TMPDIR/checksums.groovy" "LESSON6_HOURS7_8_PROVISIONED"
+deploy "$TMPDIR/capstone_provision.groovy" "LESSON6_CAPSTONE_PROVISIONED"
+deploy "$TMPDIR/lab_artifact_verifier.groovy" "LAB_ARTIFACT_VERIFIER_PROVISIONED"
 
 curl -gfsS -u "admin:$PASS" \
   "$BASE/job/lesson6-artifact-demo/api/json?tree=name,buildable,nextBuildNumber" |
   python3 -m json.tool
 
-echo "Restored Lesson 6. No build was triggered; previous job/build history was not deleted."
+for job in lesson6-capstone-pipeline lab-artifact-verifier; do
+  curl -gfsS -u "admin:$PASS" "$BASE/job/$job/api/json?tree=name,buildable,nextBuildNumber" | python3 -m json.tool
+done
+
+echo "Restored all Lesson 6 jobs. No builds triggered; existing history preserved."
