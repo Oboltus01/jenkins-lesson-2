@@ -66,7 +66,7 @@ fi
 ready=false
 for i in $(seq 1 90); do
   if docker logs "$NAME" 2>&1 | grep -Fq 'Jenkins is fully up and running'; then
-    response=$(curl -fsS --max-time 5 -u "admin:$(cat "$PASS_FILE")" \\
+    response=$(curl -fsS --max-time 5 -u "admin:$(cat "$PASS_FILE")" \
       http://localhost:8080/whoAmI/api/json 2>/dev/null || true)
     if printf '%s' "$response" | python3 -c '
 import json, sys
