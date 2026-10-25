@@ -15,23 +15,38 @@ This directory saves the **Hours 3–4 final job configuration** and a standalon
 
 Actions in the shell script are **messages only**: it does not actually deploy software or run unit tests. `buildWithParameters` is a Jenkins API call used to simulate a webhook; this example does not register an external webhook receiver. The grep/cut parser works for the compact sample format, but is not a general JSON parser.
 
-## Recreate in a fresh Killercoda session
+## Quick start — new Killercoda session (recommended)
 
-Start a temporary Jenkins instance, configure a protected administrator account, create an API token through the Jenkins UI, and set the token in your shell:
-
-```bash
-read -rsp "Jenkins API token: " API_TOKEN; echo
-export API_TOKEN
-```
-
-**Never commit tokens/passwords to GitHub.** Then download and execute the standalone provisioning script:
+Run this command in Killercoda's terminal:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Oboltus01/jenkins-lesson-2/main/lesson5/recover.sh -o /tmp/lesson5-recover.sh
-bash /tmp/lesson5-recover.sh
+curl -fsSL \
+  https://raw.githubusercontent.com/Oboltus01/jenkins-lesson-2/77bcc900449b164119467e58ed76e33bf38047c3/lesson5/start-all.sh \
+  -o /tmp/jenkins-start.sh && bash /tmp/jenkins-start.sh
 ```
 
-The script starts Jenkins if absent, waits for readiness, and provisions the final configuration using an authenticated API token. It deliberately does not disable CSRF or configure an insecure anonymous administrative account.
+- On a fresh session, choose and enter a password (at least 12 characters) when prompted. Input is hidden.
+- Open **Traffic / Ports → 8080**; username is `admin`, password is the one you entered.
+- The script initializes Jenkins as `my-jenkins`, keeps CSRF enabled (with client IP excluded for Killercoda's HTTPS reverse proxy), and creates or updates `lesson5-webhook-demo`.
+- In the same session, rerunning the command reuses the local password file and existing container; it does not delete the job. In a new Killercoda session, enter the same chosen password again.
+- Passwords are never committed to GitHub; they are stored only in temporary Killercoda files. This is for a temporary training environment, not production.
+
+After login, open `lesson5-webhook-demo` → **Build with Parameters** and use:
+
+```json
+{"event":"release","repo":"Oboltus01/jenkins-lesson-2","action":"published"}
+```
+
+Then click **Build** and inspect **Console Output** for `Finished: SUCCESS`.
+
+### Standalone recovery (when Jenkins is already installed)
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/Oboltus01/jenkins-lesson-2/6146c1829e41aabfbfa99ca4fb8e3775c0b26563/lesson5/recover.sh -o /tmp/jenkins-recover.sh
+bash /tmp/jenkins-recover.sh
+```
+
+This uses the existing temporary admin password and CSRF token for authentication; a separately created API token is not required in this lab setup.
 
 ## Send test data
 
