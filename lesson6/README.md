@@ -6,7 +6,10 @@
 
 - [provision.groovy](provision.groovy) — Hours 1–2, генерация файлов в Workspace.
 - [validation.groovy](validation.groovy) — Hours 3–4, проверки манифеста.
-- [restore.sh](restore.sh) — восстановление двух конфигураций в уже работающем Jenkins (конечная — Validation Gates).
+- [checksums.groovy](checksums.groovy) — Hours 7–8: MD5, ArtifactArchiver и fingerprints.
+- [capstone_provision.groovy](capstone_provision.groovy) — Hours 9–10: Capstone.
+- [lab_artifact_verifier.groovy](lab_artifact_verifier.groovy) — самостоятельная лабораторная на Bash.
+- [restore.sh](restore.sh) — восстановление всех трёх Jenkins Job.
 
 ## Восстановление в новой Killercoda
 
@@ -20,11 +23,11 @@ bash /tmp/jenkins-fast.sh
 Когда Jenkins доступен (HTTP 200) и известен локальный пароль:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Oboltus01/jenkins-lesson-2/main/lesson6/restore.sh -o /tmp/lesson6-restore.sh
+curl -fsSL https://raw.githubusercontent.com/Oboltus01/jenkins-lesson-2/lesson-structure/lesson6/restore.sh -o /tmp/lesson6-restore.sh
 bash /tmp/lesson6-restore.sh
 ```
 
-Скрипт **не запускает сборку автоматически** и не уничтожает текущую Job или историю сборок. Он заменяет Shell-конфигурацию существующего `lesson6-artifact-demo` на финальную версию Hours 3–4.
+Скрипт **не запускает сборку автоматически** и не уничтожает текущую Job или историю сборок. Он восстанавливает `lesson6-artifact-demo` (конечная конфигурация Hours 7–8), `lesson6-capstone-pipeline` и `lab-artifact-verifier` без запуска сборок.
 
 Для проверки из API:
 ```bash
@@ -37,3 +40,7 @@ curl -fsS -u "admin:$PASS" http://localhost:8080/job/lesson6-artifact-demo/lastB
 ## Результаты практики 25.10.2026
 
 Build #1 с PRODUCTION — SUCCESS; Build #2 с STAGING — SUCCESS. ZIP с Workspace был скачан, проверен и распакован. В уроке использовались Crumb + cookies одной сессии для POST-вызовов.
+
+## Практика 25 октября 2026 (продолжение)
+
+Hours 7–8: Jenkins `SUCCESS`, `Archiving artifacts`, `Recording fingerprints`, архивированный `app-v1.bin` успешно проверен через `md5sum -c` после скачивания. Capstone: Build #1 `SUCCESS`, `release.json` получен через REST API. Для лабораторной скрипт исправлен на Bash из-за отсутствия `python3` внутри Jenkins; успешный повторный запуск пока не подтверждён.
