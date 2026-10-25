@@ -8,8 +8,8 @@ PASS=$(cat "$PASS_FILE")
 TMPDIR=$(mktemp -d)
 trap 'rm -rf "$TMPDIR"' EXIT
 
-curl -fsSL https://raw.githubusercontent.com/Oboltus01/jenkins-lesson-2/main/lesson6/provision.groovy -o "$TMPDIR/provision.groovy"
-curl -fsSL https://raw.githubusercontent.com/Oboltus01/jenkins-lesson-2/main/lesson6/validation.groovy -o "$TMPDIR/validation.groovy"
+curl -fsSL https://raw.githubusercontent.com/Oboltus01/jenkins-lesson-2/lesson-structure/lesson6/provision.groovy -o "$TMPDIR/provision.groovy"
+curl -fsSL https://raw.githubusercontent.com/Oboltus01/jenkins-lesson-2/lesson-structure/lesson6/validation.groovy -o "$TMPDIR/validation.groovy"
 
 get_crumb() {
   curl -fsS -u "admin:$PASS" -c "$TMPDIR/cookies" -b "$TMPDIR/cookies" "$BASE/crumbIssuer/api/json" |
