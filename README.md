@@ -8,11 +8,11 @@
 
 ```bash
 curl -fsSL \
-  https://raw.githubusercontent.com/Oboltus01/jenkins-lesson-2/77bcc900449b164119467e58ed76e33bf38047c3/lesson5/start-all.sh \
+  https://raw.githubusercontent.com/Oboltus01/jenkins-lesson-2/33719f55aa21fb0caf15417e2f1b9c060203290a/lesson5/start-all.sh \
   -o /tmp/jenkins-start.sh && bash /tmp/jenkins-start.sh
 ```
 
-Скрипт `lesson5/start-all.sh` предложит ввести выбранный пароль администратора (не менее 12 символов), поднимет контейнер `my-jenkins`, проверит пользователя `admin`, настроит CSRF для HTTPS-прокси и восстановит задание `lesson5-webhook-demo`. При повторном запуске в этой же сессии пароль берётся из локального файла; после сброса Killercoda тот же пароль нужно ввести заново. **Пароль не хранится в GitHub.**
+Скрипт `lesson5/start-all.sh` предложит ввести выбранный пароль администратора (не менее 12 символов), поднимет контейнер `my-jenkins`, проверит пользователя `admin`, настроит CSRF для HTTPS-прокси и восстановит **два задания**: `lesson5-webhook-demo` (финальная версия Hours 5–6) и `lab-webhook-receiver` (домашнее задание). При повторном запуске в этой же сессии пароль берётся из локального файла; после сброса Killercoda тот же пароль нужно ввести заново. **Пароль не хранится в GitHub.**
 
 Открой Killercoda **Traffic / Ports → 8080** и войди под `admin` с выбранным паролем.
 
